@@ -1,0 +1,861 @@
+<html lang="zh-CN"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>像素赛鸽 - 障碍穿越游戏</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.544.0/dist/umd/lucide.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+        :root {
+            --primary-color: #3B82F6;
+            --secondary-color: #93C5FD;
+            --background-color: #F8FAFC;
+            --text-color: #1E293B;
+            --pixel-size: 4px;
+        }
+
+        body {
+            font-family: 'Press Start 2P', cursive;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        .pixel-text {
+            font-family: 'Press Start 2P', cursive;
+            text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.2);
+        }
+
+        .pixel-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: 4px solid var(--text-color);
+            box-shadow: 4px 4px 0px var(--text-color);
+            transition: all 0.1s;
+            padding: 12px 24px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .pixel-button:hover {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px var(--text-color);
+        }
+
+        .pixel-button:active {
+            transform: translate(4px, 4px);
+            box-shadow: 0px 0px 0px var(--text-color);
+        }
+
+        .game-container {
+            position: relative;
+            width: 800px;
+            height: 600px;
+            margin: 0 auto;
+            border: 8px solid var(--text-color);
+            overflow: hidden;
+            background-color: #E0F2FE;
+        }
+
+        .sky {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 80%;
+            background: linear-gradient(to bottom, #E0F2FE, #BFDBFE);
+        }
+
+        .ground {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 20%;
+            background-color: #94A3B8;
+        }
+
+        .pigeon {
+            position: absolute;
+            width: 40px;
+            height: 30px;
+            transition: transform 0.1s;
+        }
+
+        .pipe {
+            position: absolute;
+            width: 60px;
+            background-color: #475569;
+        }
+
+        .pipe-top {
+            bottom: 70%;
+            height: 30%;
+        }
+
+        .pipe-bottom {
+            top: 50%;
+            height: 50%;
+        }
+
+        .score {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 24px;
+            z-index: 10;
+        }
+
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 20;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border: 6px solid var(--text-color);
+            box-shadow: 8px 8px 0px var(--text-color);
+        }
+
+        .start-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.95);
+            z-index: 30;
+        }
+
+        .pause-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.9);
+            z-index: 25;
+            display: none;
+        }
+
+        .pause-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 15;
+        }
+
+        .cloud {
+            position: absolute;
+            background-color: white;
+            border-radius: 50%;
+            opacity: 0.8;
+        }
+
+        @keyframes fly {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .animate-fly {
+            animation: fly 0.3s infinite;
+        }
+
+        .animate-blink {
+            animation: blink 0.5s 3;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 820px) {
+            .game-container {
+                width: 95vw;
+                height: calc(95vw * 0.75);
+            }
+            
+            .pixel-button {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+            
+            .score {
+                font-size: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .pixel-button {
+                padding: 8px 16px;
+                font-size: 12px;
+            }
+            
+            .score {
+                font-size: 16px;
+            }
+            
+            .game-over h2 {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen p-4">
+    
+    <div class="game-container" id="gameContainer">
+        <!-- 开始界面 -->
+        <div class="start-screen" id="startScreen">
+            <h2 class="pixel-text text-3xl mb-8">像素赛鸽</h2>
+            <p class="pixel-text mb-6 text-sm">点击鼠标或按空格键让鸽子飞行</p>
+            <p class="pixel-text mb-8 text-sm">穿越管道，不要撞到障碍物！</p>
+            <button class="pixel-button" id="startButton">开始游戏</button>
+        </div>
+
+        <!-- 暂停界面 -->
+        <div class="pause-screen" id="pauseScreen">
+            <h2 class="pixel-text text-3xl mb-6">游戏暂停</h2>
+            <div class="flex flex-col gap-4">
+                <button class="pixel-button" id="resumeButton">继续游戏</button>
+                <button class="pixel-button" id="restartButton">重新开始</button>
+                <button class="pixel-button" id="menuButton">返回主菜单</button>
+            </div>
+        </div>
+
+        <!-- 游戏结束界面 -->
+        <div class="game-over" id="gameOverScreen" style="display: none;">
+            <h2 class="pixel-text text-3xl mb-4">游戏结束</h2>
+            <p class="pixel-text text-xl mb-2">最终得分: <span id="finalScore">0</span></p>
+            <div class="flex flex-col gap-4 mt-6">
+                <button class="pixel-button" id="playAgainButton">再玩一次</button>
+                <button class="pixel-button" id="backToMenuButton">返回主菜单</button>
+            </div>
+        </div>
+
+        <!-- 游戏元素 -->
+        <div class="sky" id="sky"></div>
+        <div class="ground" id="ground"></div>
+        <div class="score pixel-text" id="score">0</div>
+        <button class="pause-button" id="pauseButton">⏸️</button>
+
+        <!-- SVG 元素容器 -->
+        <svg id="gameSvg" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;">
+            <!-- 鸽子和管道将通过 JavaScript 动态添加 -->
+        </svg>
+    </div>
+
+    <script>
+        // 游戏状态
+        const GameState = {
+            MENU: 'menu',
+            PLAYING: 'playing',
+            PAUSED: 'paused',
+            GAME_OVER: 'gameOver'
+        };
+
+        // 游戏配置
+        const config = {
+            gravity: 0.3,
+            jumpForce: -8,
+            pipeSpeed: 4,
+            pipeInterval: 1500, // 毫秒
+            pipeGap: 150,
+            pipeWidth: 60,
+            pigeonWidth: 40,
+            pigeonHeight: 30,
+            gameWidth: 800,
+            gameHeight: 600
+        };
+
+        // 游戏变量
+        let gameState = GameState.MENU;
+        let score = 0;
+        let highScore = localStorage.getItem('pixelPigeonHighScore') || 0;
+        let pigeon = {
+            x: 100,
+            y: 300,
+            velocity: 0,
+            element: null
+        };
+        let pipes = [];
+        let animationId;
+        let lastPipeTime = 0;
+        let gameSvg;
+        let gameContainer;
+
+        // 初始化游戏
+        function initGame() {
+            gameContainer = document.getElementById('gameContainer');
+            gameSvg = document.getElementById('gameSvg');
+            
+            // 更新配置以匹配实际容器大小
+            config.gameWidth = gameContainer.offsetWidth;
+            config.gameHeight = gameContainer.offsetHeight;
+            
+            createPigeon();
+            createClouds();
+            setupEventListeners();
+            updateDisplay();
+        }
+
+        // 创建像素风格的鸽子
+        function createPigeon() {
+            const pigeonSvg = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            pigeonSvg.setAttribute('id', 'pigeon');
+            pigeonSvg.setAttribute('transform', `translate(${pigeon.x}, ${pigeon.y})`);
+            
+            // 鸽子身体（像素风格）
+            const body = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            body.setAttribute('x', '0');
+            body.setAttribute('y', '5');
+            body.setAttribute('width', '32');
+            body.setAttribute('height', '20');
+            body.setAttribute('fill', '#475569');
+            
+            // 鸽子头部
+            const head = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            head.setAttribute('x', '28');
+            head.setAttribute('y', '8');
+            head.setAttribute('width', '12');
+            head.setAttribute('height', '14');
+            head.setAttribute('fill', '#475569');
+            
+            // 鸽子眼睛
+            const eye = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            eye.setAttribute('cx', '36');
+            eye.setAttribute('cy', '14');
+            eye.setAttribute('r', '3');
+            eye.setAttribute('fill', 'white');
+            
+            // 鸽子嘴巴
+            const beak = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+            beak.setAttribute('points', '40,12 48,15 40,18');
+            beak.setAttribute('fill', '#F59E0B');
+            
+            // 鸽子翅膀
+            const wing = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            wing.setAttribute('id', 'wing');
+            wing.setAttribute('x', '8');
+            wing.setAttribute('y', '8');
+            wing.setAttribute('width', '20');
+            wing.setAttribute('height', '12');
+            wing.setAttribute('fill', '#94A3B8');
+            
+            // 鸽子尾巴
+            const tail = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+            tail.setAttribute('points', '0,10 0,25 -8,17.5');
+            tail.setAttribute('fill', '#475569');
+            
+            // 组装鸽子
+            pigeonSvg.appendChild(body);
+            pigeonSvg.appendChild(head);
+            pigeonSvg.appendChild(eye);
+            pigeonSvg.appendChild(beak);
+            pigeonSvg.appendChild(wing);
+            pigeonSvg.appendChild(tail);
+            
+            gameSvg.appendChild(pigeonSvg);
+            pigeon.element = pigeonSvg;
+        }
+
+        // 创建云朵背景
+        function createClouds() {
+            const sky = document.getElementById('sky');
+            for (let i = 0; i < 5; i++) {
+                const cloud = document.createElement('div');
+                cloud.className = 'cloud';
+                
+                // 随机云朵大小和位置
+                const size = 40 + Math.random() * 60;
+                cloud.style.width = `${size}px`;
+                cloud.style.height = `${size * 0.6}px`;
+                cloud.style.left = `${Math.random() * 100}%`;
+                cloud.style.top = `${Math.random() * 60}%`;
+                
+                // 为云朵添加多个圆形部分以形成像素云效果
+                for (let j = 0; j < 3; j++) {
+                    const cloudPart = document.createElement('div');
+                    cloudPart.style.position = 'absolute';
+                    cloudPart.style.backgroundColor = 'white';
+                    cloudPart.style.borderRadius = '50%';
+                    cloudPart.style.width = `${size * (0.6 + j * 0.1)}px`;
+                    cloudPart.style.height = `${size * (0.4 + j * 0.1)}px`;
+                    cloudPart.style.left = `${j * 10}px`;
+                    cloudPart.style.top = `${-j * 5}px`;
+                    cloud.appendChild(cloudPart);
+                }
+                
+                sky.appendChild(cloud);
+            }
+        }
+
+        // 创建管道
+        function createPipe() {
+            const pipeGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            pipeGroup.classList.add('pipe-group');
+            
+            // 随机管道高度，确保游戏难度适中
+            const minGapStart = 120;
+            const maxGapStart = config.gameHeight - config.pipeGap - 120;
+            const gapStart = Math.floor(minGapStart + Math.random() * (maxGapStart - minGapStart));
+            
+            // 管道颜色
+            const pipeColor = '#475569';
+            const pipeCapColor = '#334155';
+            const capHeight = 8;
+            const capWidthExtension = 5;
+            
+            // 上管道 - 从顶部到gapStart（确保显示长度与碰撞箱长度一致）
+            const topPipeHeight = gapStart;
+            const topPipe = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            topPipe.classList.add('pipe', 'pipe-top');
+            topPipe.setAttribute('x', '0');
+            topPipe.setAttribute('y', '0');
+            topPipe.setAttribute('width', config.pipeWidth);
+            topPipe.setAttribute('height', topPipeHeight);
+            topPipe.setAttribute('fill', pipeColor);
+            
+            // 上管道底部的盖子 - 确保与碰撞箱下沿对齐
+            const topPipeCap = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            topPipeCap.setAttribute('x', -capWidthExtension);
+            topPipeCap.setAttribute('y', gapStart - capHeight); // 盖子紧贴碰撞箱下沿
+            topPipeCap.setAttribute('width', config.pipeWidth + (capWidthExtension * 2));
+            topPipeCap.setAttribute('height', capHeight);
+            topPipeCap.setAttribute('fill', pipeCapColor);
+            
+            // 下管道 - 从gapStart + config.pipeGap到底部
+            const bottomPipeY = gapStart + config.pipeGap;
+            const bottomPipeHeight = config.gameHeight - bottomPipeY;
+            const bottomPipe = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            bottomPipe.classList.add('pipe', 'pipe-bottom');
+            bottomPipe.setAttribute('x', '0');
+            bottomPipe.setAttribute('y', bottomPipeY);
+            bottomPipe.setAttribute('width', config.pipeWidth);
+            bottomPipe.setAttribute('height', bottomPipeHeight);
+            bottomPipe.setAttribute('fill', pipeColor);
+            
+            // 下管道顶部的盖子 - 修复对齐问题
+            const bottomPipeCap = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            bottomPipeCap.setAttribute('x', -capWidthExtension);
+            bottomPipeCap.setAttribute('y', bottomPipeY - capHeight); // 盖子紧贴管道顶部
+            bottomPipeCap.setAttribute('width', config.pipeWidth + (capWidthExtension * 2));
+            bottomPipeCap.setAttribute('height', capHeight);
+            bottomPipeCap.setAttribute('fill', pipeCapColor);
+            
+            // 添加像素细节
+            const pixelSpacing = 16;
+            const pixelWidth = 3;
+            const pixelHeight = 6;
+            
+            // 上管道像素细节
+            for (let i = 0; i < topPipeHeight; i += pixelSpacing) {
+                const pixel = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                pixel.setAttribute('x', config.pipeWidth - 6);
+                pixel.setAttribute('y', i);
+                pixel.setAttribute('width', pixelWidth);
+                pixel.setAttribute('height', pixelHeight);
+                pixel.setAttribute('fill', pipeCapColor);
+                topPipe.appendChild(pixel);
+            }
+            
+            // 下管道像素细节
+            for (let i = 0; i < bottomPipeHeight; i += pixelSpacing) {
+                const pixel = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                pixel.setAttribute('x', config.pipeWidth - 6);
+                pixel.setAttribute('y', i);
+                pixel.setAttribute('width', pixelWidth);
+                pixel.setAttribute('height', pixelHeight);
+                pixel.setAttribute('fill', pipeCapColor);
+                bottomPipe.appendChild(pixel);
+            }
+            
+            // 按正确的顺序组装管道组
+            // 先添加管道主体，再添加盖子，确保盖子显示在管道上方
+            pipeGroup.appendChild(topPipe);
+            pipeGroup.appendChild(bottomPipe);
+            pipeGroup.appendChild(topPipeCap);    // 上管道盖子
+            pipeGroup.appendChild(bottomPipeCap);  // 下管道盖子
+            
+            // 设置初始位置在屏幕右侧
+            pipeGroup.setAttribute('transform', `translate(${config.gameWidth}, 0)`);
+            
+            // 添加到游戏SVG中
+            gameSvg.appendChild(pipeGroup);
+            
+            // 添加到管道数组，存储关键数据用于碰撞检测
+            pipes.push({
+                element: pipeGroup,
+                topPipe: topPipe,
+                bottomPipe: bottomPipe,
+                topPipeCap: topPipeCap,
+                bottomPipeCap: bottomPipeCap,
+                x: config.gameWidth,
+                gapStart: gapStart,
+                gapEnd: gapStart + config.pipeGap,
+                passed: false
+            });
+        }
+
+        // 移动鸽子
+        function movePigeon() {
+            // 平滑更新速度和位置
+            pigeon.velocity += config.gravity;
+            // 限制最大速度，防止移动过快
+            pigeon.velocity = Math.min(pigeon.velocity, 10); // 最大下落速度
+            pigeon.velocity = Math.max(pigeon.velocity, -12); // 最大上升速度
+            
+            pigeon.y += pigeon.velocity;
+            
+            // 限制鸽子在游戏区域内
+            if (pigeon.y < 0) {
+                pigeon.y = 0;
+                pigeon.velocity = 0;
+            }
+            
+            if (pigeon.y > config.gameHeight - config.pigeonHeight - 20) {
+                pigeon.y = config.gameHeight - config.pigeonHeight - 20;
+                pigeon.velocity = 0;
+            }
+            
+            // 鸽子翅膀动画 - 基于速度平滑旋转
+            const wing = document.getElementById('wing');
+            const smoothWingRotation = pigeon.velocity < 0 ? 
+                Math.max(-40, pigeon.velocity * 2.5) : 
+                Math.min(40, pigeon.velocity * 2.5);
+            wing.setAttribute('transform', `rotate(${smoothWingRotation}, 18, 14)`);
+            
+            // 鸽子身体旋转 - 基于速度平滑旋转
+            const bodyRotation = Math.min(30, Math.max(-30, pigeon.velocity * 1.5));
+            
+            // 一次性设置完整的变换，避免多次修改导致的闪烁
+            pigeon.element.setAttribute('transform', `translate(${pigeon.x}, ${pigeon.y}) rotate(${bodyRotation}, 20, 15)`);
+        }
+
+        // 移动管道
+        function movePipes() {
+            for (let i = pipes.length - 1; i >= 0; i--) {
+                const pipe = pipes[i];
+                
+                // 更新管道位置
+                pipe.x -= config.pipeSpeed;
+                
+                // 直接设置管道组的位置
+                pipe.element.setAttribute('transform', `translate(${pipe.x}, 0)`);
+                
+                // 检查是否通过管道
+                if (!pipe.passed && pipe.x + config.pipeWidth < pigeon.x) {
+                    score++;
+                    updateDisplay();
+                    pipe.passed = true;
+                    
+                    // 播放得分音效（如果有）
+                    playScoreSound();
+                }
+                
+                // 移除离开屏幕的管道
+                if (pipe.x + config.pipeWidth < 0) {
+                    if (pipe.element.parentNode === gameSvg) {
+                        gameSvg.removeChild(pipe.element);
+                    }
+                    pipes.splice(i, 1);
+                }
+            }
+        }
+
+        // 检测碰撞
+        function checkCollision() {
+            // 检查与地面和天空的碰撞
+            if (pigeon.y <= 0 || pigeon.y >= config.gameHeight - config.pigeonHeight - 20) {
+                gameOver();
+                return;
+            }
+            
+            // 检查与管道的碰撞
+            pipes.forEach(pipe => {
+                const pipeLeft = pipe.x;
+                const pipeRight = pipe.x + config.pipeWidth;
+                
+                // 使用存储的准确数据
+                const topPipeBottom = pipe.gapStart;
+                const bottomPipeTop = pipe.gapEnd;
+                
+                const pigeonLeft = pigeon.x;
+                const pigeonRight = pigeon.x + config.pigeonWidth;
+                const pigeonTop = pigeon.y;
+                const pigeonBottom = pigeon.y + config.pigeonHeight;
+                
+                // 检查鸽子是否在管道的水平范围内
+                if (pigeonRight > pipeLeft + 5 && pigeonLeft < pipeRight - 5) {
+                    // 检查是否与上管道碰撞（鸽子底部超过管道顶部，且鸽子顶部在上管道范围内）
+                    if (pigeonBottom > 0 && pigeonTop < topPipeBottom) {
+                        gameOver();
+                        return;
+                    }
+                    
+                    // 检查是否与下管道碰撞（鸽子顶部低于管道底部，且鸽子底部在下管道范围内）
+                    if (pigeonTop < config.gameHeight && pigeonBottom > bottomPipeTop) {
+                        gameOver();
+                        return;
+                    }
+                }
+            });
+        }
+
+        // 游戏结束
+        function gameOver() {
+            gameState = GameState.GAME_OVER;
+            cancelAnimationFrame(animationId);
+            
+            // 更新最高分
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('pixelPigeonHighScore', highScore);
+            }
+            
+            // 显示游戏结束界面
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('gameOverScreen').style.display = 'block';
+            
+            // 鸽子碰撞动画
+            pigeon.element.classList.add('animate-blink');
+            
+            // 播放游戏结束音效（如果有）
+            playGameOverSound();
+        }
+
+        // 开始游戏
+        function startGame() {
+            gameState = GameState.PLAYING;
+            score = 0;
+            pigeon.y = config.gameHeight / 2;
+            pigeon.velocity = 0;
+            
+            // 完全清除所有管道
+            clearAllPipes();
+            
+            lastPipeTime = Date.now();
+            
+            // 重置界面
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('pauseScreen').style.display = 'none';
+            document.getElementById('gameOverScreen').style.display = 'none';
+            pigeon.element.classList.remove('animate-blink');
+            
+            // 开始游戏循环
+            gameLoop();
+        }
+        
+        // 完全清除所有管道
+        function clearAllPipes() {
+            // 移除所有管道DOM元素
+            const pipeGroups = document.querySelectorAll('.pipe-group');
+            pipeGroups.forEach(group => {
+                if (group.parentNode === gameSvg) {
+                    gameSvg.removeChild(group);
+                }
+            });
+            
+            // 清空管道数组
+            pipes = [];
+        }
+
+        // 暂停游戏
+        function pauseGame() {
+            if (gameState === GameState.PLAYING) {
+                gameState = GameState.PAUSED;
+                cancelAnimationFrame(animationId);
+                document.getElementById('pauseScreen').style.display = 'flex';
+            }
+        }
+
+        // 继续游戏
+        function resumeGame() {
+            if (gameState === GameState.PAUSED) {
+                gameState = GameState.PLAYING;
+                document.getElementById('pauseScreen').style.display = 'none';
+                lastPipeTime = Date.now();
+                gameLoop();
+            }
+        }
+
+        // 返回主菜单
+        function backToMenu() {
+            gameState = GameState.MENU;
+            document.getElementById('startScreen').style.display = 'flex';
+            document.getElementById('pauseScreen').style.display = 'none';
+            document.getElementById('gameOverScreen').style.display = 'none';
+            
+            // 重置游戏
+            score = 0;
+            pigeon.y = config.gameHeight / 2;
+            pigeon.velocity = 0;
+            
+            // 完全清除所有管道
+            clearAllPipes();
+            
+            updateDisplay();
+        }
+
+        // 游戏循环
+        function gameLoop() {
+            if (gameState !== GameState.PLAYING) return;
+            
+            // 移动鸽子
+            movePigeon();
+            
+            // 生成管道
+            const currentTime = Date.now();
+            if (currentTime - lastPipeTime > config.pipeInterval) {
+                createPipe();
+                lastPipeTime = currentTime;
+            }
+            
+            // 移动管道
+            movePipes();
+            
+            // 检测碰撞
+            checkCollision();
+            
+            // 继续游戏循环
+            animationId = requestAnimationFrame(gameLoop);
+        }
+
+        // 更新显示
+        function updateDisplay() {
+            document.getElementById('score').textContent = score;
+        }
+
+        // 播放跳跃音效
+        function playJumpSound() {
+            // 可以在这里添加跳跃音效
+        }
+
+        // 播放得分音效
+        function playScoreSound() {
+            // 可以在这里添加得分音效
+        }
+
+        // 播放游戏结束音效
+        function playGameOverSound() {
+            // 可以在这里添加游戏结束音效
+        }
+
+        // 设置事件监听器
+        function setupEventListeners() {
+            // 开始按钮
+            document.getElementById('startButton').addEventListener('click', startGame);
+            
+            // 再玩一次按钮
+            document.getElementById('playAgainButton').addEventListener('click', startGame);
+            
+            // 返回主菜单按钮
+            document.getElementById('backToMenuButton').addEventListener('click', backToMenu);
+            
+            // 暂停按钮
+            document.getElementById('pauseButton').addEventListener('click', pauseGame);
+            
+            // 继续按钮
+            document.getElementById('resumeButton').addEventListener('click', resumeGame);
+            
+            // 重新开始按钮
+            document.getElementById('restartButton').addEventListener('click', startGame);
+            
+            // 菜单按钮
+            document.getElementById('menuButton').addEventListener('click', backToMenu);
+            
+            // 键盘事件
+            document.addEventListener('keydown', (e) => {
+                if (e.code === 'Space') {
+                    e.preventDefault();
+                    if (gameState === GameState.PLAYING) {
+                        // 设置跳跃速度
+                        pigeon.velocity = config.jumpForce;
+                        // 移除任何可能存在的过渡效果，确保立即响应
+                        pigeon.element.style.transition = '';
+                        playJumpSound();
+                    } else if (gameState === GameState.MENU) {
+                        startGame();
+                    } else if (gameState === GameState.PAUSED) {
+                        resumeGame();
+                    }
+                } else if (e.code === 'Escape') {
+                    if (gameState === GameState.PLAYING) {
+                        pauseGame();
+                    } else if (gameState === GameState.PAUSED) {
+                        resumeGame();
+                    }
+                }
+            });
+            
+            // 鼠标点击事件
+            gameContainer.addEventListener('click', (e) => {
+                // 忽略按钮点击
+                if (e.target.tagName === 'BUTTON' || e.target.closest('.pixel-button')) {
+                    return;
+                }
+                
+                if (gameState === GameState.PLAYING) {
+                    // 设置跳跃速度
+                    pigeon.velocity = config.jumpForce;
+                    // 移除任何可能存在的过渡效果，确保立即响应
+                    pigeon.element.style.transition = '';
+                    playJumpSound();
+                } else if (gameState === GameState.MENU) {
+                    // 在菜单界面点击也可以开始游戏
+                    startGame();
+                }
+            });
+            
+            // 触摸事件
+            gameContainer.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (gameState === GameState.PLAYING) {
+                    // 设置跳跃速度
+                    pigeon.velocity = config.jumpForce;
+                    // 移除任何可能存在的过渡效果，确保立即响应
+                    pigeon.element.style.transition = '';
+                    playJumpSound();
+                } else if (gameState === GameState.MENU) {
+                    // 在菜单界面触摸也可以开始游戏
+                    startGame();
+                }
+            }, { passive: false });
+            
+            // 窗口大小改变时重新调整游戏大小
+            window.addEventListener('resize', () => {
+                config.gameWidth = gameContainer.offsetWidth;
+                config.gameHeight = gameContainer.offsetHeight;
+                
+                // 重新定位鸽子
+                if (pigeon.y > config.gameHeight - config.pigeonHeight - 20) {
+                    pigeon.y = config.gameHeight - config.pigeonHeight - 20;
+                    pigeon.element.setAttribute('transform', `translate(${pigeon.x}, ${pigeon.y})`);
+                }
+            });
+        }
+
+        // 初始化游戏
+        window.addEventListener('DOMContentLoaded', initGame);
+    </script>
+
+
+</body></html>
