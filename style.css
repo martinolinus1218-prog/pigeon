@@ -1,0 +1,259 @@
+/* 全局样式 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f0f8ff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+/* 游戏容器 */
+.game-container {
+    position: relative;
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* 游戏标题 */
+.game-title {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.game-title h1 {
+    font-size: 2.5rem;
+    color: #333;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    letter-spacing: 2px;
+}
+
+/* 游戏画布容器 */
+.game-canvas-container {
+    position: relative;
+    width: 100%;
+    height: 600px;
+    overflow: hidden;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(to bottom, #87CEEB, #E0F7FA);
+}
+
+/* 游戏画布 */
+#gameCanvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* 游戏屏幕（开始和结束） */
+.game-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.8);
+    z-index: 10;
+    transition: all 0.5s ease;
+}
+
+.game-screen.hidden {
+    display: none;
+}
+
+.game-screen h2 {
+    font-size: 3rem;
+    color: #333;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.final-score {
+    font-size: 1.5rem;
+    color: #333;
+    margin-bottom: 30px;
+}
+
+/* 游戏按钮 */
+.game-button {
+    padding: 15px 40px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: white;
+    background: linear-gradient(to bottom, #4CAF50, #45a049);
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    outline: none;
+}
+
+.game-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    background: linear-gradient(to bottom, #45a049, #3d8b40);
+}
+
+.game-button:active {
+    transform: scale(0.95);
+}
+
+/* 得分显示 */
+.score-display {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: white;
+    border-radius: 25px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.score-label {
+    color: #666;
+}
+
+#currentScore {
+    color: #4CAF50;
+    transition: all 0.3s ease;
+}
+
+#currentScore.score-change {
+    transform: scale(1.2);
+    color: #FF9800;
+}
+
+/* 操作说明悬浮提示 */
+.controls-hint {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+}
+
+.hint-trigger {
+    padding: 10px 15px;
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #333;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.hint-trigger:hover {
+    background-color: white;
+    transform: translateY(-2px);
+}
+
+.hint-content {
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    width: 200px;
+    padding: 15px;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    transform: translateY(10px);
+}
+
+.controls-hint:hover .hint-content {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.hint-content p {
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    color: #555;
+    line-height: 1.4;
+}
+
+.hint-content p:last-child {
+    margin-bottom: 0;
+}
+
+/* 赛鸽样式（通过JavaScript绘制到Canvas上） */
+/* 管道样式（通过JavaScript绘制到Canvas上） */
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .game-title h1 {
+        font-size: 2rem;
+    }
+    
+    .game-canvas-container {
+        height: 500px;
+    }
+    
+    .game-screen h2 {
+        font-size: 2.5rem;
+    }
+    
+    .game-button {
+        padding: 12px 30px;
+        font-size: 1rem;
+    }
+    
+    .score-display {
+        font-size: 1.2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .game-title h1 {
+        font-size: 1.5rem;
+    }
+    
+    .game-canvas-container {
+        height: 400px;
+    }
+    
+    .game-screen h2 {
+        font-size: 2rem;
+    }
+    
+    .final-score {
+        font-size: 1.2rem;
+    }
+    
+    .game-button {
+        padding: 10px 25px;
+        font-size: 0.9rem;
+    }
+    
+    .score-display {
+        font-size: 1rem;
+    }
+    
+    .hint-content {
+        width: 150px;
+        font-size: 0.8rem;
+    }
+}

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>赛鸽飞行模拟</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <!-- 游戏标题区 -->
+        <div class="game-title">
+            <h1>赛鸽飞行模拟</h1>
+        </div>
+        
+        <!-- 游戏画布区 -->
+        <div class="game-canvas-container">
+            <canvas id="gameCanvas" width="800" height="600"></canvas>
+            
+            <!-- 游戏开始界面 -->
+            <div id="startScreen" class="game-screen">
+                <button id="startButton" class="game-button">开始游戏</button>
+            </div>
+            
+            <!-- 游戏结束界面 -->
+            <div id="endScreen" class="game-screen hidden">
+                <h2>游戏结束</h2>
+                <p class="final-score">最终得分: <span id="scoreValue">0</span></p>
+                <button id="restartButton" class="game-button">重新开始</button>
+            </div>
+        </div>
+        
+        <!-- 得分显示区 -->
+        <div class="score-display">
+            <span class="score-label">得分:</span>
+            <span id="currentScore">0</span>
+        </div>
+        
+        <!-- 操作说明悬浮提示区 -->
+        <div class="controls-hint">
+            <div class="hint-trigger">操作说明</div>
+            <div class="hint-content">
+                <p>使用鼠标点击或空格键控制赛鸽飞行</p>
+                <p>躲避管道障碍，尽可能飞得更远</p>
+                <p>每穿过一组管道得1分</p>
+            </div>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
